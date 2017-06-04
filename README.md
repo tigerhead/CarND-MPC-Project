@@ -37,7 +37,12 @@ Lf is length from front to CoG and f is a polynomial function of x, which is the
 
 For driving, T should be a few seconds, othereise the environment will change enough that it won't make sense to predict any further into the future.  The goal of Model Predictive Control is to optimize two accuators. Larger N means more variables and more complex cost function.  With larger N, optimization model may be more accurate result but calculation cost will be higher and it takes longer time to return solution result. So there should be a balance between accurancy and calculation cost.  MPC attempts to approximate a continues reference trajectory by means of discrete paths between actuations. Larger values of dt result in less frequent actuations, which makes it harder to accurately approximate a continuous reference trajectory.
 
-In this project, I chose the T to be less or equal to 1 second. I started dt as 0.05 and N = 20 which makes T = 1 second. 
+In this project, I chose the T to be less or equal to 1 second. I started dt as 0.05 and N = 20 which makes T = 1 second. It actually gave a pretty good result. Cost reduce to blow 10 in about 40 cycles and stayed steady, so the car drove smoothly. I tried follwing combination:
+| N       | dt          | Cost converge | Drive smoothness | 
+| ------------- | -----:|:-------------|:--------:|
+| 20      | .05 | converge at value around 10 | smooth | 
+| 40     | 0.05 |   Not converge very well | eradicate | 
+| 10 | 0.05     |  converge at value around 40  | Ok|
 
 
 

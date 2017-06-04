@@ -16,8 +16,8 @@ I chose Global Kinematic Model discussed in the course.
 - epsi - turn rate
 
 2. Two acutors: 
--delta - turning angle
--a - acceleration 
+- delta - turning angle
+- a - acceleration 
 3. State Update equation
 - x[t+1] = x[t] + v[t] * dt * cos(psi[t])
 - y[t+1] = y[t] + v[t] * dt * sin(psi[t])

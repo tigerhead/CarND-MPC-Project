@@ -44,6 +44,12 @@ In this project, I chose the T to be less or equal to 1 second. I started dt as 
 | 40      | 0.05 | Not converge very well | eradicate | 
 | 10      | 0.05 |  converge at value around 40  | Ok |
 
+Markdown | Less | Pretty
+--- | --- | ---
+*Still* | `renders` | **nicely**
+1 | 2 | 3
+
+
 
 
 

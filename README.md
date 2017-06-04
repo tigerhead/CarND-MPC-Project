@@ -5,7 +5,7 @@ Self-Driving Car Engineer Nanodegree Program Term 2 project 5 MPC
 
 # MPC Implementation Reflection
 
-##Model
+## Model
 I chose Global Kinematic Model discussed in the course. 
 1. State vector include 6 elements:
 - x - vehicle position x co-ordinate

@@ -18,6 +18,7 @@ I chose Global Kinematic Model discussed in the course.
 2. Two acutors: 
 - delta - turning angle
 - a - acceleration 
+
 3. State Update equation
 - x[t+1] = x[t] + v[t] * dt * cos(psi[t])
 - y[t+1] = y[t] + v[t] * dt * sin(psi[t])
@@ -26,8 +27,7 @@ I chose Global Kinematic Model discussed in the course.
 - cte[t+1] = (f(x[t]) - y[t]) + v[t] * sin(epsi[t]) * dt
 - espi[t+1] = psi[t] - psides[t] + v[t]/Lf * delta[t]*dt
 
-* Lf - length from front to CoG 
-* f is a polynomial function of x, which is the reference way point for vehicle In this project the polynomial order is 3
+Lf is length from front to CoG and f is a polynomial function of x, which is the reference way point for vehicle In this project the polynomial order is 3.
 
 
 

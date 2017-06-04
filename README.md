@@ -27,7 +27,7 @@ I chose Global Kinematic Model discussed in the course.
 - cte[t+1] = (f(x[t]) - y[t]) + v[t] * sin(epsi[t]) * dt
 - espi[t+1] = psi[t] - psides[t] + v[t]/Lf * delta[t]*dt
 
-Lf is length from front to CoG and f is a polynomial function of x, which is the reference way point for vehicle In this project the polynomial order is 3.
+Lf is length from front to CoG and f is a polynomial function of x, which is the reference way point for vehicle In this project the polynomial order is 3: f(x) = coefs[0] + coefs[1] * x + coefs[2] * pow(x, 2) + coefs[3] * pow(x, 3).
 
 
 

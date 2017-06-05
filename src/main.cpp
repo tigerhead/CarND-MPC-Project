@@ -70,12 +70,15 @@ int main() {
     
     // MPC is initialized here!
     MPC mpc;
+    int steps = 0;
     
-    h.onMessage([&mpc](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+    h.onMessage([&mpc, &steps](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
         // "42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
+        steps++;
+        cout << "step: " << steps <<endl;
         string sdata = string(data).substr(0, length);
         cout << sdata << endl;
         if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
@@ -102,40 +105,36 @@ int main() {
                     Eigen::VectorXd xvals(ptsx.size());
                     Eigen::VectorXd yvals(ptsy.size());
                     for(int l = 0; l < ptsx.size(); l++){
-                        xvals[l] = ptsx[l];
-                       // xvals[l]= (ptsx[l] - px)*cos(psi) + (ptsy[l] - py)*sin(psi);
-                       yvals[l] = ptsy[l];
-                        //yvals[l] = (ptsy[l]- py)*cos(psi) - (ptsx[l] - px)*sin(psi);
+                        //Convert to car co-ordinate
+                       xvals[l]= (ptsx[l] - px)*cos(psi) + (ptsy[l] - py)*sin(psi);
+                       yvals[l] = (ptsy[l]- py)*cos(psi) - (ptsx[l] - px)*sin(psi);
                     }
                     
                     
                     auto coeffs = polyfit(xvals, yvals, 3);
 
-                    std::cout << "polynomial coeffs: " << coeffs << std::endl;
+                   // std::cout << "polynomial coeffs: " << coeffs << std::endl;
                     // The cross track error is calculated by evaluating at polynomial at x, f(x)
                     // and subtracting y.
-                    double cte = polyeval(coeffs, px) - py;
+                    double cte = polyeval(coeffs, 0);
                     // Due to the sign starting at 0, the orientation error is -f'(x).
-                    // derivative of coeffs[0] + coeffs[1] * x + coeffs[2] * pow(x, 2) + coeffs[3] * pow(x, 3)-> coeffs[1] + 2* coeffs[2] * x + 3* coeffs[3] * pow(x, 2)
-                    Eigen::VectorXd coeffs_dev(3);
-                    coeffs_dev[0] = coeffs[1];
-                    coeffs_dev[1] = 2* coeffs[2];
-                    coeffs_dev[2] = 3* coeffs[3];
+                    // derivative of coeffs[0] + coeffs[1] * x + coeffs[2] * pow(x, 2) + coeffs[3] * pow(x, 3)-> coeffs[1] + 2* coeffs[2] * x + 3* coeffs[3] * pow(x, 2),and x = 0
+
                     
-                    double epsi = -atan( polyeval(coeffs_dev, px));
+                    double epsi = -atan(coeffs[1]);
                     Eigen::VectorXd state(6);
-                    state << px, py, psi, v, cte, epsi;
-                    //state << 0, 0, 0, v, cte, epsi;
+                    //state << px, py, psi, v, cte, epsi;
+                    state << 0, 0, 0, v, cte, epsi;
                     
-                    vector<double> controls = mpc.Solve(state, coeffs);
+                    vector<double> solution = mpc.Solve(state, coeffs);
                     
                     
                     
                     double steer_value;
                     double throttle_value;
-                    steer_value = -controls[0]/deg2rad(25);
+                    steer_value = -solution[0]/deg2rad(25);
                     //steer_value = controls[0];
-                    throttle_value = controls[1];
+                    throttle_value = solution[1];
                     
                     if(steer_value > 1) steer_value = 1;
                     if(steer_value < -1) steer_value = -1;
@@ -152,6 +151,21 @@ int main() {
                     //Display the MPC predicted trajectory 
                     vector<double> mpc_x_vals;
                     vector<double> mpc_y_vals;
+
+                    mpc_x_vals.push_back(solution[2]);
+                    mpc_x_vals.push_back(solution[3] + mpc_x_vals[mpc_x_vals.size()-1]);
+                    mpc_x_vals.push_back(solution[4] + mpc_x_vals[mpc_x_vals.size()-1]);
+                    mpc_x_vals.push_back(solution[5] + mpc_x_vals[mpc_x_vals.size()-1]);
+                    mpc_x_vals.push_back(solution[6] + mpc_x_vals[mpc_x_vals.size()-1]);
+                    //mpc_x_vals.push_back(solution[7] + mpc_x_vals[mpc_x_vals.size()-1]);
+
+                    mpc_y_vals.push_back(solution[8]);
+                    mpc_y_vals.push_back(solution[9] + mpc_y_vals[mpc_y_vals.size()-1]);
+                    mpc_y_vals.push_back(solution[10] + mpc_y_vals[mpc_y_vals.size()-1]);
+                    mpc_y_vals.push_back(solution[11] + mpc_y_vals[mpc_y_vals.size()-1]);
+                    mpc_y_vals.push_back(solution[12] + mpc_y_vals[mpc_y_vals.size()-1]);
+                   // mpc_y_vals.push_back(solution[13] + mpc_y_vals[mpc_y_vals.size()-1]);
+
                     
                     //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
                     // the points in the simulator are connected by a Green line
@@ -162,6 +176,11 @@ int main() {
                     //Display the waypoints/reference line
                     vector<double> next_x_vals;
                     vector<double> next_y_vals;
+
+                    for(int i = 0; i<  100; i+=5) {
+                        next_x_vals.push_back(i);
+                        next_y_vals.push_back(polyeval(coeffs, i));
+                    }
                     
                     //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
                     // the points in the simulator are connected by a Yellow line

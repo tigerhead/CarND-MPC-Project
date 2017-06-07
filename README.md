@@ -77,6 +77,11 @@ I just used cost function used in MPC to line quizz which inclued three parts:
 
 I played with Multiplier with different cost part to smooth the driving path. Finally I could achieve max speed of 65 mph. I noticed one issue with my model is turning speed. In reality, turning speed should reduce and after turning it increase again. But in my model, the speed was not reduced at turning so that the max speed was limited to 65 mph and couldn't go any higher I am not sure how to tune the model to control speed dynamically. 
 
+## Recorded driving video in simulator
+Here is the link:
+https://youtu.be/X6burSIhLj0
+
+
 
 
 

@@ -47,20 +47,20 @@ N | dt | Cost converge | Drive smoothness
 5 | 0.05 |  Not converge very well  | off track
 10 | 0.05 |   converge at value around 40  | smooth
 12 | 0.1 | converge well  | very smooth
-10 | 0.1| onverge well| very smooth
+10 | 0.1| converge well| very smooth
+5 | 0.1| Not converge well| ff track
 
-So I finally choose N = 10 and dt = 0.1
+So I finally choose N = 10 and dt = 0.1 since it has the least number of paramenter and still give pretty good result.
 
 ## Polynomial Fitting and MPC Preprocessing
 
-To calculate error: cte and epsi, the  reference trajectory is approximated by polynomial fitting. As descriped model section, in this project 3rd order polynomial function is used to fitt reference trajectory or ay point. To calculate coefficients of the polynomial function, two vectors read from simulator ptsx, ptsy is used. To make calculation easier, data points in pptsx, ptsy were converted to car co-ordinate and polyfit utility function was used to calculate coefficients. f(x) = coeffs[0] + coeffs[1] * x + coeffs[2] * pow(x, 2) + coeffs[3] * pow(x, 3). After the  conversion, the state vector passed to MPC is:
-x = 0, y= 0, psi = 0, v = the v value from simulator input, cte = f(0), epsi = atan(f'(0)) = atan(coeffs[1])
+To calculate error: cte and epsi, the  reference trajectory is approximated by polynomial fitting. As descriped model section, in this project 3rd order polynomial function is used to fitt reference trajectory or ay point. To calculate coefficients of the polynomial function, two vectors read from simulator ptsx, ptsy is used. Data points in pptsx, ptsy were converted to car co-ordinate and polyfit utility function was used to calculate coefficients. f(x') = coeffs[0] + coeffs[1] * x' + coeffs[2] * pow(x', 2) + coeffs[3] * pow(x', 3).  x' is the x in car co-ordinate. cte = f(x') sinc y' = 0 here, epsi = atan(f'(x')) = atan(coeffs[1] + 2* ceoffs[2] * x' + 3* ceoffs[3] * pow(x', 2)). f' is derivative of f.
 
 Initial actuators steering and throttle were both set to 0.
 
 ## Model Predictive Control with Latency
 
-In this project, Latency is set to 100 milliseconds = 0.1 second. Latency is handled by skipped actuators input if the time elapse is less than latency time. So before the state is passed to MPC solve function. Use Kinematic Model to update the state with dt = 0.1 second. 
+In this project, Latency is set to 100 milliseconds = 0.1 second. Latency is handled by skipped actuators input if the time elapse is less than latency time. So before the state is passed to MPC solve function, Use Kinematic Model to update the state with dt = 0.1 second. 
 
 double latency = 0.1;
 

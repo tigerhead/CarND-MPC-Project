@@ -7,8 +7,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 15;
-double dt = 0.05;
+size_t N = 12;
+double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -24,10 +24,12 @@ const double Lf = 2.67;
 
 
 // Both the reference cross track and orientation errors are 0.
-// The reference velocity is set to 40 mph.
+// The reference velocity is set to 50 mph.
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 55;
+double ref_v = 65*1609.34/60.0/60.0;
+
+//double ref_v = 50;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -63,21 +65,21 @@ public:
 
         // The part of the cost based on the reference state.
         for (int i = 0; i < N; i++) {
-            fg[0] += CppAD::pow(vars[cte_start + i] - ref_cte, 2);
+            fg[0] +=  CppAD::pow(vars[cte_start + i] - ref_cte, 2);
             fg[0] +=  150 * CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
-            fg[0] +=  10 * CppAD::pow(vars[v_start + i] - ref_v, 2);
+            fg[0] +=   10 * CppAD::pow(vars[v_start + i] - ref_v, 2);
         }
 
         // Minimize the use of actuators.
         for (int i = 0; i < N - 1; i++) {
-            fg[0] += 6 * CppAD::pow(vars[delta_start + i], 2);
-            fg[0] +=  6 * CppAD::pow(vars[a_start + i], 2);
+            fg[0] += 5 * CppAD::pow(vars[delta_start + i], 2);
+            fg[0] +=  5 * CppAD::pow(vars[a_start + i], 2);
         }
 
         // Minimize the value gap between sequential actuations.
         for (int i = 0; i < N - 2; i++) {
-            fg[0] += 5000 * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
-            fg[0] +=  10* CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+            fg[0] += 500 * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+            fg[0] +=  20* CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
         }
 
         //
@@ -97,8 +99,7 @@ public:
         fg[1 + cte_start] = vars[cte_start];
         fg[1 + epsi_start] = vars[epsi_start];
 
-        AD<double> prevDelta = vars[delta_start];
-        AD<double> prevThr = vars[a_start];
+
 
         // The rest of the constraints
         for (int i = 0; i < N - 1; i++) {
@@ -122,10 +123,10 @@ public:
             AD<double> delta0 = vars[delta_start + i];
             AD<double> a0 = vars[a_start + i];
 
-            if (i > int(.1/dt)) delta0 = vars[delta_start + i - int(.1/dt)];
+           /* if (i > int(.1/dt)) delta0 = vars[delta_start + i - int(.1/dt)];
             else delta0 = prevDelta;
             if (i > int(.1/dt)) a0 = vars[a_start + i - int(.1/dt)];
-            else a0 = prevThr;
+            else a0 = prevThr;*/
 
 
             AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0,2)+ coeffs[3] * CppAD::pow(x0,3);
@@ -162,6 +163,10 @@ public:
 //
 MPC::MPC() {}
 MPC::~MPC() {}
+
+double MPC::getLf(){
+    return Lf;
+}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     bool ok = true;

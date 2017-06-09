@@ -71,6 +71,8 @@ int main() {
     // MPC is initialized here!
     MPC mpc;
     int steps = 0;
+    //double previous_steer_angle = 0.0;
+    //double previous_throttle_value = 0.0;
     
     h.onMessage([&mpc, &steps](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
@@ -94,13 +96,25 @@ int main() {
                     double py = j[1]["y"];
                     double psi = j[1]["psi"];
                     double v = j[1]["speed"];
+                    double previous_steer_angle = j[1]["steering_angle"];
+                    double previous_throttle_value = j[1]["throttle"];
                     
                     /*
           * TODO: Calculate steeering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
+          *           *
           */
+
+
+
+                    v = v * 1609.34 / 60.0/60.0; //convert from mph to m/s
+
+
+
+
+
                     // The polynomial is fitted to 3rd order polynomial with
                     Eigen::VectorXd xvals(ptsx.size());
                     Eigen::VectorXd yvals(ptsy.size());
@@ -113,18 +127,34 @@ int main() {
                     
                     auto coeffs = polyfit(xvals, yvals, 3);
 
+
+                    //Handle 100miliseconds latency, in thsi 100 milisends, the state of vichle will be predicated as 0.1 second in the future
+
+                    double latency = 0.1;
+                    px = v * latency;
+                    psi = - v* previous_steer_angle/mpc.getLf() * latency;
+                    v = v + previous_throttle_value * latency;
+
+
+
+
                    // std::cout << "polynomial coeffs: " << coeffs << std::endl;
                     // The cross track error is calculated by evaluating at polynomial at x, f(x)
                     // and subtracting y.
-                    double cte = polyeval(coeffs, 0);
+
+
+
+
+
+                    double cte = polyeval(coeffs, px);
                     // Due to the sign starting at 0, the orientation error is -f'(x).
                     // derivative of coeffs[0] + coeffs[1] * x + coeffs[2] * pow(x, 2) + coeffs[3] * pow(x, 3)-> coeffs[1] + 2* coeffs[2] * x + 3* coeffs[3] * pow(x, 2),and x = 0
 
                     
-                    double epsi = -atan(coeffs[1]);
+                    double epsi = atan(coeffs[1] + 2* coeffs[2] * px + 3* coeffs[3] * pow(px, 2));
                     Eigen::VectorXd state(6);
                     //state << px, py, psi, v, cte, epsi;
-                    state << 0, 0, 0, v, cte, epsi;
+                    state << px, 0, psi, v, cte, epsi;
                     
                     vector<double> solution = mpc.Solve(state, coeffs);
                     
@@ -132,6 +162,7 @@ int main() {
                     
                     double steer_value;
                     double throttle_value;
+                    //Normalized the steering value between 1 and -1
                     steer_value = -solution[0]/deg2rad(25);
                     //steer_value = controls[0];
                     throttle_value = solution[1];
@@ -141,6 +172,9 @@ int main() {
                     
                     if(throttle_value > 1) throttle_value = 1;
                     if(throttle_value < -1) throttle_value = -1;
+
+                    //previous_steer_angle = steer_value;
+                    //previous_throttle_value = throttle_value;
                     
                     json msgJson;
                     // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.

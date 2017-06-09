@@ -45,11 +45,11 @@ N | dt | Cost converge | Drive smoothness
 40 | 0.05 | Not converge very well | eradicate
 10 | 0.05 |  converge at value around 40  | Ok
 5 | 0.05 |  Not converge very well  | off track
-15 | 0.05 |   converge at value around 40  | Very smooth
-15 | 0.025 | Not converge very well | off track
-15 | 0.075 | Not converge very well | off track
+10 | 0.05 |   converge at value around 40  | smooth
+12 | 0.1 | converge well  | very smooth
+10 | 0.1| onverge well| very smooth
 
-So I finally choose N = 15 and dt = 0.05
+So I finally choose N = 10 and dt = 0.1
 
 ## Polynomial Fitting and MPC Preprocessing
 
@@ -60,26 +60,39 @@ Initial actuators steering and throttle were both set to 0.
 
 ## Model Predictive Control with Latency
 
-In this project, Latency is set to 100 milliseconds = 0.1 second. Latency is handled by skipped actuators input if the time elapse is less than latency time. 
+In this project, Latency is set to 100 milliseconds = 0.1 second. Latency is handled by skipped actuators input if the time elapse is less than latency time. So before the state is passed to MPC solve function. Use Kinematic Model to update the state with dt = 0.1 second. 
 
-if (i > int(.1/dt)) delta0 = vars[delta_start + i - int(.1/dt)];
-else delta0 = previousDelta;
-if (i > int(.1/dt)) a0 = vars[a_start + i - int(.1/dt)];
-else a0 = previoousThrottle;
+double latency = 0.1;
+
+px = v * latency;
+
+psi = - v* previous_steer_angle/mpc.getLf() * latency;
+
+v = v + previous_throttle_value * latency;
 
 
 ## Model cost function tuning
 
 I just used cost function used in MPC to line quizz which inclued three parts:
-- Cost based on the reference state
-- Cost basd on actuators
-- Cost on between sequential actuations
+- Cost based on the reference state: cte, epsi and speed
+- Cost based on actuators: steering angle, throttle
+- Cost on between sequential actuations: sequential steering angle difference, sequential throttle difference
 
-I played with Multiplier with different cost part to smooth the driving path. Finally I could achieve max speed of 65 mph. I noticed one issue with my model is turning speed. In reality, turning speed should reduce and after turning it increase again. But in my model, the speed was not reduced at turning so that the max speed was limited to 65 mph and couldn't go any higher I am not sure how to tune the model to control speed dynamically. 
+I played with weights with different cost part to smooth the driving path. I found steering angle and sequential steering angle difference iompact the driving path the most. I put a lots of weight on thsese two. I finally 
+used following weight: 
+- cte cost weight: 1
+- epsi cost weight: 150
+- speed cost weight: 10
+- steering angle cost weight: 5
+- throttle cost weight: 5
+- sequential steering angle difference cost weight: 500
+- sequential throttle difference cost weight: 5
+
+I could achieve max speed of 70 mph with these weight.But 65 will be safer. I noticed one issue with my model is turning speed. With more tuning, I believe, I could achieve higher speed. However, in reality, turning speed should reduce and after turning it increase again. But in current model, the speed was not reduced at turning since the refernce speed is set to a constant. To improve MPC more, the reference speed need to be a function of turning angel. But I am not sure how to build this function. Any advise on this part is welcome. 
 
 ## Recorded driving video in simulator
 Here is the link:
-https://youtu.be/X6burSIhLj0
+https://youtu.be/ZJSJUITXvZQ
 
 
 
